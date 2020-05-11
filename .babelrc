@@ -7,5 +7,7 @@
        }],
         "@babel/preset-react"
     ],
-    "plugins": ["inline-dotenv"]
+    "plugins": [["inline-dotenv",{
+        "path": "./.env" 
+      }]]
 }
