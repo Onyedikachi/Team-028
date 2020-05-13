@@ -1,10 +1,11 @@
 import express from 'express';
 
-import userCtl from '..';
+import userCtl from '../index';
 
 
 const router = express.Router();
 
-router.use('/register', userCtl.register);
+router.post('/register', userCtl.register);
+router.post('/login', userCtl.login);
 
 module.exports = router;

@@ -4,15 +4,28 @@ import bodyParser from 'body-parser';
 import path from 'path';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import session from 'express-session';
+import expressip from 'express-ip';
 import * as cookieParser from 'cookie-parser';
 import logger from './config/logger';
 import apiRoutes from './router';
 
 import config from './config';
 
+
 const port = process.env.PORT || config.port;
 
 const app = express();
+
+// determine user ip
+app.use(expressip().getIpInfoMiddleware);
+
+// use session
+app.use(session({
+  secret: config.jwtsecret,
+  resave: false,
+  saveUninitialized: true
+}));
 
 // logging
 app.use(morgan(':method\t\t:url\t\t:status\t\t:response-time', {

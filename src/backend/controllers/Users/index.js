@@ -4,7 +4,6 @@ import jwt from 'jsonwebtoken';
 import * as Model from '../../models';
 import config from '../../config';
 
-
 /**
  * Create users
  * @param {object} req - Request object
@@ -68,8 +67,60 @@ module.exports.register = async (req, res) => {
       }));
   });
 
-  return res.status(400).son({
+  return res.status(400).json({
     status: 'error',
     message: 'something went wrong'
   });
+};
+
+/**
+ * User Login
+ * @param {object} req - Request object
+ * @param {object} res - Response object
+ */
+module.exports.login = async (req, res) => {
+  // verify user email exists
+  const user = await Model.User.findOne({ where: { userEmail: req.body.email } });
+  if (!user) return res.status(400).json({ status: 'error', message: 'user email does not exist' });
+
+  const userData = user.dataValues;
+  // verify if user password
+  const match = await bcrypt.compare(req.body.password, userData.userPassword);
+  delete userData.userPassword;
+  if (!match) return res.status(400).json({ status: 'error', message: 'incorrect password' });
+
+  // create session
+  const sessionData = {};
+  sessionData.userId = parseInt(userData.userID, 10);
+  sessionData.userIP = req.connection.remoteAddress || req.ipInfo.ip;
+  sessionData.timeLoggedIn = new Date();
+  sessionData.timeLoggedOut = new Date();
+  sessionData.sessionState = true;
+
+  // generate token
+  const privateKey = config.jwtsecret;
+  const token = jwt.sign(userData, privateKey);
+  sessionData.userToken = token;
+
+  // update session variables
+  if (!req.session.isLoggedIn) req.session.isLoggedIn = true;
+  if (!req.session.data) req.session.data = sessionData;
+
+  // save session to database;
+  const savedSession = await Model.Session.create(sessionData);
+  if (!savedSession) return res.status(400).json({ status: 'error', message: 'error saving session data' });
+
+  const auditData = {};
+
+  auditData.action = 'status';
+  auditData.actionStatus = 'success';
+  auditData.performedBy = userData.userID;
+
+  await Model.Audit.create(auditData);
+
+  // update session variables
+  if (!req.session.isLoggedIn) req.session.isLoggedIn = true;
+  if (!req.session.data) req.session.data = sessionData;
+
+  return res.status(200).json({ status: 'success', message: 'you have successfully logged in', token });
 };
