@@ -1,10 +1,10 @@
 import express from 'express';
 
-import userRoutes from '../controllers/Users/routes';
+import userCtl from '..';
 
 
 const router = express.Router();
 
-router.use('/user', userRoutes);
+router.use('/register', userCtl.register);
 
 module.exports = router;
