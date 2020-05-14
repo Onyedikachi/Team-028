@@ -1,8 +1,9 @@
-/* eslint-disable consistent-return */
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
 import * as Model from '../../models';
 import config from '../../config';
+import logger from '../../config/logger';
 
 /**
  * Create users
@@ -27,6 +28,7 @@ module.exports.register = async (req, res) => {
   userData.userOrganization = parseInt(req.body.organization, 10);
   userData.userPhone = parseInt(req.body.phone, 10);
   userData.userRole = parseInt(req.body.role, 10);
+  userData.isVerified = false;
   userData.createdAt = new Date();
   userData.updatedAt = new Date();
 
@@ -47,7 +49,9 @@ module.exports.register = async (req, res) => {
 
   // add token to data
   const privateKey = config.jwtsecret;
-  const token = jwt.sign(data, privateKey);
+  const token = jwt.sign(data, privateKey, {
+    expiresIn: '1h'
+  });
   data.token = token;
 
   // update audit
@@ -66,6 +70,33 @@ module.exports.register = async (req, res) => {
       message: error.message || 'User registered, but there are errors generating audit data'
     });
   }
+
+  // send email
+  const transporter = nodemailer.createTransport({
+    host: config.mail.host,
+    port: config.mail.port,
+    auth: {
+      user: config.mail.user,
+      pass: config.mail.pass
+    },
+    debug: true,
+    logger: true
+  });
+
+  const mailOptions = {
+    from: 'vindication@ezSME.com',
+    to: 'kachi.nwosu@gmail.com',
+    subject: 'Verify your email',
+    text: 'Verify your email to enjoy full access'
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      logger.error(error);
+    } else {
+      logger.info(`Email sent:  + ${info.response}`);
+    }
+  });
 
   return res.status(200).json({
     status: 'success',
@@ -96,6 +127,9 @@ module.exports.login = async (req, res) => {
 
   delete userData.userPassword;
 
+  // check if user email have been verified
+  if (!userData.isVerified) return res.status(400).json({ status: 'error', message: 'registered but not verified' });
+
   // create session
   const sessionData = {};
   sessionData.userId = parseInt(userData.userID, 10);
@@ -106,7 +140,9 @@ module.exports.login = async (req, res) => {
 
   // generate token
   const privateKey = config.jwtsecret;
-  const token = jwt.sign(userData, privateKey);
+  const token = jwt.sign(userData, privateKey, {
+    expiresIn: '1h'
+  });
   sessionData.userToken = token;
 
   // update session variables
