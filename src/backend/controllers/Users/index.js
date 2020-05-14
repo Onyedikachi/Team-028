@@ -18,58 +18,59 @@ module.exports.register = async (req, res) => {
 
   // hash the password
   const saltRounds = 10;
-  bcrypt.hash(req.body.password, saltRounds, (error, hash) => {
-    if (error) return res.status(400).json({ status: 'error', message: 'password not hashed correctly' });
+  const hash = await bcrypt.hash(req.body.password, saltRounds);
 
-    userData.userName = req.body.name;
-    userData.userPassword = hash;
-    userData.userEmail = req.body.email;
-    userData.userCategory = parseInt(req.body.category, 10);
-    userData.userOrganization = parseInt(req.body.organization, 10);
-    userData.userPhone = parseInt(req.body.phone, 10);
-    userData.userRole = parseInt(req.body.role, 10);
-    userData.createdAt = new Date();
-    userData.updatedAt = new Date();
+  userData.userName = req.body.name;
+  userData.userPassword = hash;
+  userData.userEmail = req.body.email;
+  userData.userCategory = parseInt(req.body.category, 10);
+  userData.userOrganization = parseInt(req.body.organization, 10);
+  userData.userPhone = parseInt(req.body.phone, 10);
+  userData.userRole = parseInt(req.body.role, 10);
+  userData.createdAt = new Date();
+  userData.updatedAt = new Date();
 
-    Model.User.create(userData)
-      .then((usr) => {
-        // delete user password from json sent to client
-        const data = usr.dataValues;
-        delete data.userPassword;
+  let usr;
 
-        // add token to data
-        const privateKey = config.jwtsecret;
-        const token = jwt.sign(data, privateKey);
-        data.token = token;
+  try {
+    usr = await Model.User.create(userData);
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: error.message || 'Some error occurred while creating user'
+    });
+  }
 
-        // update audit
-        const auditData = {};
+  // delete user password from json sent to client
+  const data = usr.dataValues;
+  delete data.userPassword;
 
-        auditData.action = 'register';
-        auditData.actionStatus = 'success';
-        auditData.performedBy = data.userID;
-        auditData.actionTime = data.createdAt;
+  // add token to data
+  const privateKey = config.jwtsecret;
+  const token = jwt.sign(data, privateKey);
+  data.token = token;
 
-        Model.Audit.create(auditData)
-          .then(() => res.status(200).json({
-            status: 'success',
-            message: 'You have registered successfully',
-            data
-          }))
-          .catch((e) => res.status(400).json({
-            status: 'error',
-            message: e.message || 'User registered, but there are errors generating audit data'
-          }));
-      })
-      .catch((er) => res.status(500).json({
-        status: 'error',
-        message: er.message || 'Some error occurred while creating user'
-      }));
-  });
+  // update audit
+  const auditData = {};
 
-  return res.status(400).json({
-    status: 'error',
-    message: 'something went wrong'
+  auditData.action = 'register';
+  auditData.actionStatus = 'success';
+  auditData.performedBy = data.userID;
+  auditData.actionTime = data.createdAt;
+
+  try {
+    await Model.Audit.create(auditData);
+  } catch (error) {
+    return res.status(400).json({
+      status: 'error',
+      message: error.message || 'User registered, but there are errors generating audit data'
+    });
+  }
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'You have registered successfully',
+    data
   });
 };
 
@@ -89,7 +90,7 @@ module.exports.login = async (req, res) => {
   try {
     match = await bcrypt.compare(req.body.password, userData.userPassword);
   } catch (error) {
-    res.status(400).json({ status: 'error', message: error.message || 'error while encrypting password' });
+    return res.status(400).json({ status: 'error', message: error.message || 'error while encrypting password' });
   }
   if (!match) return res.status(400).json({ status: 'error', message: 'incorrect password' });
 
@@ -130,7 +131,6 @@ module.exports.login = async (req, res) => {
   } catch (error) {
     return res.status(400).json({ status: 'error', message: error.message || 'error saving audit data' });
   }
-
 
   // update session variables
   if (!req.session.isLoggedIn) req.session.isLoggedIn = true;
