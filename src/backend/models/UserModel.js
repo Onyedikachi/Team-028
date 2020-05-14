@@ -25,6 +25,9 @@ module.exports = (sequelize, Datatypes) => sequelize.define('users', {
   userPhone: {
     type: Datatypes.BIGINT
   },
+  isVerified: {
+    type: Datatypes.BOOLEAN
+  },
   createdAt: {
     type: Datatypes.DATE
   },
