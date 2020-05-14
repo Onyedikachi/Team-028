@@ -85,9 +85,15 @@ module.exports.login = async (req, res) => {
 
   const userData = user.dataValues;
   // verify if user password
-  const match = await bcrypt.compare(req.body.password, userData.userPassword);
-  delete userData.userPassword;
+  let match;
+  try {
+    match = await bcrypt.compare(req.body.password, userData.userPassword);
+  } catch (error) {
+    res.status(400).json({ status: 'error', message: error.message || 'error while encrypting password' });
+  }
   if (!match) return res.status(400).json({ status: 'error', message: 'incorrect password' });
+
+  delete userData.userPassword;
 
   // create session
   const sessionData = {};
@@ -107,16 +113,24 @@ module.exports.login = async (req, res) => {
   if (!req.session.data) req.session.data = sessionData;
 
   // save session to database;
-  const savedSession = await Model.Session.create(sessionData);
-  if (!savedSession) return res.status(400).json({ status: 'error', message: 'error saving session data' });
-
+  try {
+    const session = await Model.Session.create(sessionData);
+    sessionData.sessionId = session.dataValues.sessionId;
+  } catch (error) {
+    return res.status(400).json({ status: 'error', message: error.message || 'error saving session data' });
+  }
   const auditData = {};
 
   auditData.action = 'status';
   auditData.actionStatus = 'success';
   auditData.performedBy = userData.userID;
 
-  await Model.Audit.create(auditData);
+  try {
+    await Model.Audit.create(auditData);
+  } catch (error) {
+    return res.status(400).json({ status: 'error', message: error.message || 'error saving audit data' });
+  }
+
 
   // update session variables
   if (!req.session.isLoggedIn) req.session.isLoggedIn = true;
