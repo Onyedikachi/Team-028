@@ -12,6 +12,7 @@ import logger from '../../config/logger';
  * Create users
  * @param {object} req - Request object
  * @param {object} res - Response object
+ * @return {json} res.json
  */
 module.exports.register = async (req, res) => {
   const userData = {};
@@ -118,6 +119,7 @@ module.exports.register = async (req, res) => {
  * User Login
  * @param {object} req - Request object
  * @param {object} res - Response object
+ * @return {json} res.json
  */
 module.exports.login = async (req, res) => {
   // verify user email exists
@@ -182,4 +184,43 @@ module.exports.login = async (req, res) => {
   if (!req.session.data) req.session.data = sessionData;
 
   return res.status(200).json({ status: 'success', message: 'you have successfully logged in', token });
+};
+
+/**
+ * User Activate
+ * @param {object} req - Request object
+ * @param {object} res - Response object
+ * @return {json} res.json
+ */
+module.exports.activate = async (req, res) => {
+  // get user token
+  const { token, email } = req.query;
+
+  // verify token
+  let userInToken;
+  try {
+    userInToken = jwt.verify(token, config.jwtsecret);
+  } catch (error) {
+    return res.status(400).json({ status: 'error', message: error.message || 'could not verify your token' });
+  }
+
+  // fetch database user
+  const userInDatabase = await Model.User.findOne({ where: { userEmail: email } });
+  if (!userInDatabase) return res.status(400).json({ status: 'error', message: 'user does not exist' });
+
+  // check if user is already verified
+  if (userInDatabase.dataValues.isVerified) return res.status(400).json({ status: 'error', message: 'user already activated' });
+
+  // validate user
+  if (
+    email !== userInToken.userEmail
+    && userInToken.userID !== userInDatabase.dataValues.userID
+    && userInToken.userEmail !== userInDatabase.dataValues.userID
+  ) return res.status(400).json({ status: 'error', message: 'could not verify this user' });
+
+  // activate user
+  userInDatabase.isVerified = true;
+  await userInDatabase.save();
+
+  return res.status(200).json({ status: 'success', message: 'congratulations, you have been verified' });
 };
