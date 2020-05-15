@@ -1,6 +1,9 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
+import Handlebars from 'handlebars';
+import fs from 'fs';
+import path from 'path';
 import * as Model from '../../models';
 import config from '../../config';
 import logger from '../../config/logger';
@@ -72,6 +75,9 @@ module.exports.register = async (req, res) => {
   }
 
   // send email
+  const source = fs.readFileSync(path.join(__dirname, '/../../templates/verifyUrl.hbs'), 'utf-8');
+  const template = Handlebars.compile(source);
+
   const transporter = nodemailer.createTransport({
     host: config.mail.host,
     port: config.mail.port,
@@ -83,11 +89,14 @@ module.exports.register = async (req, res) => {
     logger: true
   });
 
+  const host = req.get('host');
+  const verifyUrl = `http://${host}/user/verify?token=${token}`;
+
   const mailOptions = {
     from: 'vindication@ezSME.com',
     to: 'kachi.nwosu@gmail.com',
     subject: 'Verify your email',
-    text: 'Verify your email to enjoy full access'
+    html: template({ verifyUrl })
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
