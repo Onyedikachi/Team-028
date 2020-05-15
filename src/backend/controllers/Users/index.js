@@ -108,6 +108,22 @@ module.exports.register = async (req, res) => {
     }
   });
 
+  const organizationData = {};
+
+  organizationData.userID = data.userID;
+  organizationData.userCatId = data.userCategory;
+  organizationData.companyName = req.body.companyName || 'default';
+  organizationData.RCNumber = req.body.rcnumber;
+  organizationData.email = req.body.companyEmail || data.userEmail;
+  organizationData.BVN = req.body.BVN;
+  organizationData.address = req.body.address;
+  organizationData.dateIncorporated = new Date(req.body.dateIncorporated);
+
+  try {
+    await Model.Organization.create(organizationData);
+  } catch (error) {
+    logger.warn(error.message || 'error creating user organization');
+  }
   return res.status(200).json({
     status: 'success',
     message: 'You have registered successfully',
