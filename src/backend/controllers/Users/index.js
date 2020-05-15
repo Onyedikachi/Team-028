@@ -91,7 +91,7 @@ module.exports.register = async (req, res) => {
   });
 
   const host = req.get('host');
-  const verifyUrl = `http://${host}/api/v1/user/verify?token=${token}`;
+  const verifyUrl = `http://${host}/api/v1/user/verify?token=${token}&email=${data.userEmail}`;
 
   const mailOptions = {
     from: 'vindication@ezSME.com',
