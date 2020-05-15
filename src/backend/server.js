@@ -49,29 +49,28 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 app.use('/api/v1', apiRoutes);
-
-app.use((err, req, res) => {
+app.use((req, res, next) => {
+  const err = new Error('Not Found');
+  err.status = 404;
+  next(err);
+});
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
   if (err.isBoom) {
     const { message } = err.data[0];
     res.status(err.output.statusCode).json({
       status: 'error',
-      data: {
-        message
-      }
+      message
     });
   } else if (err.status === 404) {
     res.status(404).json({
       status: 'error',
-      data: {
-        message: 'Not Found'
-      }
+      message: 'Not Found'
     });
   } else {
     res.status(500).json({
       status: 'error',
-      data: {
-        message: 'Something Went Wrong'
-      }
+      message: 'Something Went Wrong'
     });
   }
 });
