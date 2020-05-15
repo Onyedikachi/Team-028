@@ -70,7 +70,7 @@ app.use((err, req, res, next) => {
   } else {
     res.status(500).json({
       status: 'error',
-      message: 'Something Went Wrong'
+      message: err.message || 'Something Went Wrong'
     });
   }
 });

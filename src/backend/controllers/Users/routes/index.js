@@ -7,5 +7,6 @@ const router = express.Router();
 
 router.post('/register', catchErrors(userCtl.register));
 router.post('/login', catchErrors(userCtl.login));
+router.get('/verify', catchErrors(userCtl.activate));
 
 module.exports = router;
