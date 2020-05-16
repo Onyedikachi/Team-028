@@ -104,3 +104,4 @@ dist
 .tern-port
 
 src/backend/app.log
+src/backend/config/config.json

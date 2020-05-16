@@ -21,6 +21,32 @@ module.exports.register = async (req, res) => {
   const user = await Model.User.findOne({ where: { userEmail: req.body.email } });
   if (user) return res.status(400).json({ status: 'error', message: 'email already exists' });
 
+  const creatorId = parseInt(req.body.creatorId, 10) || 0;
+  const creatorRole = parseInt(req.body.creatorRole, 10) || 1;
+  const creatorOrganization = parseInt(req.body.creatorOrganization, 10) || 0;
+  const userOrganization = parseInt(req.body.organization, 10);
+
+  // find organization users by creator Id
+  const organization = await Model.Organization.findByPk(creatorOrganization, { include: ['users'] });
+  let userInOrganization = null;
+  try {
+    const organizationUsers = organization.get({ plain: true }).users;
+    userInOrganization = organizationUsers.filter((element) => element.userID === creatorId);
+  } catch (error) {
+    logger.warn(error.message);
+    logger.info('No users in this company');
+  }
+
+  // get role privileges;
+  const userRoles = await Model.Role.findByPk(creatorRole, { include: ['privileges'] });
+  const userPrivileges = userRoles.get({ plain: true }).privileges;
+
+  const privilege = userPrivileges.filter((element) => element.privilegeId === 1);
+  if (!privilege) return res.status(400).json({ status: 'error', message: 'you don\'t have this privilege' });
+
+  // To create a user, the creator must be a System Admin or and admin of that Organization
+  if (!(userInOrganization || userRoles.roleId === 1 || creatorOrganization === userOrganization)) return res.status(400).json({ status: 'error', message: 'you are not allowed to create users for this organization' });
+
   // hash the password
   const saltRounds = 10;
   const hash = await bcrypt.hash(req.body.password, saltRounds);
@@ -143,6 +169,7 @@ module.exports.login = async (req, res) => {
   if (!user) return res.status(400).json({ status: 'error', message: 'user email does not exist' });
 
   const userData = user.dataValues;
+
   // verify if user password
   let match;
   try {
