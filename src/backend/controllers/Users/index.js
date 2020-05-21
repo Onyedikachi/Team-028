@@ -42,7 +42,7 @@ module.exports.register = async (req, res) => {
   const userPrivileges = userRoles.get({ plain: true }).privileges;
 
   const privilege = userPrivileges.filter((element) => element.privilegeId === 1);
-  if (!privilege) return res.status(400).json({ status: 'error', message: 'you don\'t have this privilege' });
+  if (!privilege || privilege.length < 1) return res.status(400).json({ status: 'error', message: 'you don\'t have this privilege' });
 
   // To create a user, the creator must be a System Admin or and admin of that Organization
   if (!(userInOrganization || userRoles.roleId === 1 || creatorOrganization === userOrganization)) return res.status(400).json({ status: 'error', message: 'you are not allowed to create users for this organization' });
@@ -266,4 +266,35 @@ module.exports.activate = async (req, res) => {
   await userInDatabase.save();
 
   return res.status(200).json({ status: 'success', message: 'congratulations, you have been verified' });
+};
+
+/**
+ * User Assign Role
+ * @param {object} req - Request object
+ * @param {object} res - Response object
+ * @return {json} res.json
+ */
+module.exports.assign = async (req, res) => {
+  const { userId, creatorId, newRole } = req.body;
+
+  const user = await Model.User.findByPk(userId);
+  if (!user) return res.status(400).json({ status: 'error', message: 'user does not exist' });
+
+  // check if the creator has this role privileges;
+  const creator = (await Model.User.findByPk(creatorId)).get({ plain: true });
+  const userRoles = await Model.Role.findByPk(creator.roleId, { include: ['privileges'] });
+
+  const userPrivileges = userRoles.get({ plain: true }).privileges;
+
+  const privilege = userPrivileges.filter((element) => element.privilegeId === 2);
+
+  if (!privilege || privilege.length < 1) return res.status(400).json({ status: 'error', message: 'you don\'t have this privilege' });
+
+  // check if user has that role before
+  if (user.get({ plain: true }).roleId === parseInt(newRole, 10)) return res.status(400).json({ status: 'error', message: 'same as the previous user role' });
+
+  // update user role
+  user.roleId = newRole;
+  await user.save();
+  return res.status(200).json({ status: 'success', message: 'a new role has been assigned for this user' });
 };
