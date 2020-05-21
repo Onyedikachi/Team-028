@@ -5,7 +5,7 @@ module.exports = (sequelize, DataTypes) => sequelize.define('organizations', {
     allowNull: false,
     primaryKey: true
   },
-  userID: {
+  userId: {
     type: DataTypes.INTEGER
   },
   userCatId: {

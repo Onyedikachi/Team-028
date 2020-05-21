@@ -1,5 +1,5 @@
 module.exports = (sequelize, Datatypes) => sequelize.define('users', {
-  userID: {
+  userId: {
     type: Datatypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
@@ -19,7 +19,7 @@ module.exports = (sequelize, Datatypes) => sequelize.define('users', {
   userOrganization: {
     type: Datatypes.INTEGER
   },
-  userRole: {
+  roleId: {
     type: Datatypes.INTEGER
   },
   userPhone: {
