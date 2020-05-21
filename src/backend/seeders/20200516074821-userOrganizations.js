@@ -5,7 +5,7 @@ module.exports = {
       'organizations',
       [
         {
-          userID: 0,
+          userId: 0,
           userCatId: 0,
           companyName: 'eazSME',
           RCNumber: 'RC4304df',
@@ -17,7 +17,7 @@ module.exports = {
           updatedAt: new Date()
         },
         {
-          userID: 0,
+          userId: 0,
           userCatId: 0,
           companyName: 'defaultSME',
           RCNumber: 'RC4834',

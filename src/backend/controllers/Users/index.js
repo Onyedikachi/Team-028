@@ -31,7 +31,7 @@ module.exports.register = async (req, res) => {
   let userInOrganization = null;
   try {
     const organizationUsers = organization.get({ plain: true }).users;
-    userInOrganization = organizationUsers.filter((element) => element.userID === creatorId);
+    userInOrganization = organizationUsers.filter((element) => element.userId === creatorId);
   } catch (error) {
     logger.warn(error.message);
     logger.info('No users in this company');
@@ -57,7 +57,7 @@ module.exports.register = async (req, res) => {
   userData.userCategory = parseInt(req.body.category, 10);
   userData.userOrganization = parseInt(req.body.organization, 10);
   userData.userPhone = parseInt(req.body.phone, 10);
-  userData.userRole = parseInt(req.body.role, 10);
+  userData.roleId = parseInt(req.body.role, 10);
   userData.isVerified = false;
   userData.createdAt = new Date();
   userData.updatedAt = new Date();
@@ -89,7 +89,7 @@ module.exports.register = async (req, res) => {
 
   auditData.action = 'register';
   auditData.actionStatus = 'success';
-  auditData.performedBy = data.userID;
+  auditData.performedBy = data.userId;
   auditData.actionTime = data.createdAt;
 
   try {
@@ -136,7 +136,7 @@ module.exports.register = async (req, res) => {
 
   const organizationData = {};
 
-  organizationData.userID = data.userID;
+  organizationData.userId = data.userId;
   organizationData.userCatId = data.userCategory;
   organizationData.companyName = req.body.companyName || 'default';
   organizationData.RCNumber = req.body.rcnumber;
@@ -170,7 +170,7 @@ module.exports.login = async (req, res) => {
 
   const userData = user.dataValues;
 
-  // verify if user password
+  // verify if user password matches
   let match;
   try {
     match = await bcrypt.compare(req.body.password, userData.userPassword);
@@ -186,7 +186,7 @@ module.exports.login = async (req, res) => {
 
   // create session
   const sessionData = {};
-  sessionData.userId = parseInt(userData.userID, 10);
+  sessionData.userId = parseInt(userData.userId, 10);
   sessionData.userIP = req.connection.remoteAddress || req.ipInfo.ip;
   sessionData.timeLoggedIn = new Date();
   sessionData.timeLoggedOut = new Date();
@@ -214,7 +214,7 @@ module.exports.login = async (req, res) => {
 
   auditData.action = 'status';
   auditData.actionStatus = 'success';
-  auditData.performedBy = userData.userID;
+  auditData.performedBy = userData.userId;
 
   try {
     await Model.Audit.create(auditData);
@@ -257,8 +257,8 @@ module.exports.activate = async (req, res) => {
   // validate user
   if (
     email !== userInToken.userEmail
-    && userInToken.userID !== userInDatabase.dataValues.userID
-    && userInToken.userEmail !== userInDatabase.dataValues.userID
+    && userInToken.userId !== userInDatabase.dataValues.userId
+    && userInToken.userEmail !== userInDatabase.dataValues.userId
   ) return res.status(400).json({ status: 'error', message: 'could not verify this user' });
 
   // activate user
