@@ -37,7 +37,16 @@ module.exports.create = async (req, res) => {
  * @return {json} res.json
  */
 module.exports.delete = async (req, res) => {
-  const { projCatId } = req.body;
+  const { projCatId, deletedBy } = req.body;
+
+  // check if user deleting this category has the privileges
+  const userRoles = await Model.Role.findByPk(deletedBy, { include: ['privileges'] });
+  const userPrivileges = userRoles.get({ plain: true }).privileges;
+
+  const privilege = userPrivileges.filter((element) => element.privilegeId === 11);
+  if (!privilege || privilege.length < 1) {
+    return res.status(400).json({ status: 'error', message: "you don't have this privilege" });
+  }
 
   const category = await Model.ProjectCategory.findByPk(projCatId);
 
