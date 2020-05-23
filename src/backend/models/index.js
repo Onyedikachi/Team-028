@@ -8,7 +8,7 @@ import OrganizationModel from './OrganizationModel';
 import RoleModel from './RoleModel';
 import PrivilegeModel from './PrivilegeModel';
 import RolePrivilegeModel from './RolePrivilegeModel';
-
+import ProjectCategoryModel from './ProjectCategoryModel';
 
 const sequelize = new Sequelize(config.db.database, config.db.user, config.db.password, {
   host: config.db.host,
@@ -34,6 +34,7 @@ const Organization = OrganizationModel(sequelize, Sequelize);
 const Role = RoleModel(sequelize, Sequelize);
 const Privilege = PrivilegeModel(sequelize, Sequelize);
 const RolePrivilege = RolePrivilegeModel(sequelize, Sequelize);
+const ProjectCategory = ProjectCategoryModel(sequelize, Sequelize);
 
 User.belongsTo(Organization, { foreignKey: 'organizationId', as: 'organizations' });
 Organization.hasMany(User, { as: 'users' });
@@ -43,7 +44,7 @@ RolePrivilege.belongsTo(Role, { foreignKey: 'roleId' });
 RolePrivilege.belongsTo(Privilege, { foreignKey: 'privilegeId' });
 Privilege.belongsToMany(Role, { through: 'roleprivileges', foreignKey: 'privilegeId', as: 'roles' });
 
-sequelize.sync({ force: true }).then(() => {
+sequelize.sync({ force: false }).then(() => {
   logger.info('Database & tables created here');
 });
 
@@ -55,5 +56,6 @@ module.exports = {
   Organization,
   Role,
   Privilege,
-  RolePrivilege
+  RolePrivilege,
+  ProjectCategory
 };
