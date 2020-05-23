@@ -18,6 +18,16 @@ module.exports.create = async (req, res) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
 
+  // check if user has the create project privileges
+  const userRoles = await Model.Role.findByPk(createdBy, { include: ['privileges'] });
+  const userPrivileges = userRoles.get({ plain: true }).privileges;
+
+  const privilege = userPrivileges.filter((element) => element.privilegeId === 12);
+  if (!privilege || privilege.length < 1) {
+    return res.status(400).json({ status: 'error', message: "you don't have this privilege" });
+  }
+
+
   try {
     await Model.Project.create({
       projectName,
