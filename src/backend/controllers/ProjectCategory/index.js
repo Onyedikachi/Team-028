@@ -14,7 +14,9 @@ module.exports.create = async (req, res) => {
   const userPrivileges = userRoles.get({ plain: true }).privileges;
 
   const privilege = userPrivileges.filter((element) => element.privilegeId === 6);
-  if (!privilege || privilege.length < 1) return res.status(400).json({ status: 'error', message: 'you don\'t have this privilege' });
+  if (!privilege || privilege.length < 1) {
+    return res.status(400).json({ status: 'error', message: "you don't have this privilege" });
+  }
 
   try {
     await Model.ProjectCategory.create({
@@ -26,4 +28,27 @@ module.exports.create = async (req, res) => {
     return res.status(400).json({ status: 'error', message: error.message || 'error creating this category' });
   }
   return res.status(200).json({ status: 'success', message: 'project category created successfully' });
+};
+
+/**
+ * Delete Project category
+ * @param {object} req - Request object
+ * @param {object} res - Response object
+ * @return {json} res.json
+ */
+module.exports.delete = async (req, res) => {
+  const { projCatId } = req.body;
+
+  const category = await Model.ProjectCategory.findByPk(projCatId);
+
+  if (!category) {
+    return res.status(400).json({ status: 'error', message: 'project category does not exist' });
+  }
+
+  try {
+    await category.destroy();
+  } catch (error) {
+    return res.status(400).json({ status: 'error', message: 'error deleting this category' });
+  }
+  return res.status(200).json({ status: 'success', message: 'project category deleted successfully' });
 };
