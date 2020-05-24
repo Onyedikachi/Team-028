@@ -142,5 +142,5 @@ module.exports.findOne = async (req, res) => {
     return res.status(400).json({ status: 'error', message: 'no project by that id' });
   }
 
-  return res.status(200).json({ status: 'success', message: 'all projects fetched', data: project });
+  return res.status(200).json({ status: 'success', message: 'project details retrieved', data: project });
 };
