@@ -9,6 +9,7 @@ import RoleModel from './RoleModel';
 import PrivilegeModel from './PrivilegeModel';
 import RolePrivilegeModel from './RolePrivilegeModel';
 import ProjectCategoryModel from './ProjectCategoryModel';
+import ProjectModel from './ProjectModel';
 
 const sequelize = new Sequelize(config.db.database, config.db.user, config.db.password, {
   host: config.db.host,
@@ -35,6 +36,7 @@ const Role = RoleModel(sequelize, Sequelize);
 const Privilege = PrivilegeModel(sequelize, Sequelize);
 const RolePrivilege = RolePrivilegeModel(sequelize, Sequelize);
 const ProjectCategory = ProjectCategoryModel(sequelize, Sequelize);
+const Project = ProjectModel(sequelize, Sequelize);
 
 User.belongsTo(Organization, { foreignKey: 'organizationId', as: 'organizations' });
 Organization.hasMany(User, { as: 'users' });
@@ -57,5 +59,6 @@ module.exports = {
   Role,
   Privilege,
   RolePrivilege,
-  ProjectCategory
+  ProjectCategory,
+  Project
 };
