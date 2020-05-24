@@ -7,5 +7,6 @@ const router = express.Router();
 router.post('/', catchErrors(projCtl.create));
 router.patch('/', catchErrors(projCtl.update));
 router.delete('/', catchErrors(projCtl.delete));
+router.get('/', catchErrors(projCtl.findAll));
 
 module.exports = router;

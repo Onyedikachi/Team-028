@@ -113,3 +113,15 @@ module.exports.delete = async (req, res) => {
 
   return res.status(200).json({ status: 'success', message: 'successfully deleted this project' });
 };
+
+/**
+ * fetch all projects
+ * @param {object} req - Request object
+ * @param {object} res - Response object
+ * @return {json} res.json
+ */
+module.exports.findAll = async (req, res) => {
+  const projects = await Model.Project.findAll({ raw: true });
+
+  return res.status(200).json({ status: 'success', message: 'all projects fetched', data: projects });
+};
