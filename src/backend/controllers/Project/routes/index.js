@@ -8,5 +8,6 @@ router.post('/', catchErrors(projCtl.create));
 router.patch('/', catchErrors(projCtl.update));
 router.delete('/', catchErrors(projCtl.delete));
 router.get('/', catchErrors(projCtl.findAll));
+router.get('/:projectId', catchErrors(projCtl.findOne));
 
 module.exports = router;

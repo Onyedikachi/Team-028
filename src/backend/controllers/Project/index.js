@@ -125,3 +125,22 @@ module.exports.findAll = async (req, res) => {
 
   return res.status(200).json({ status: 'success', message: 'all projects fetched', data: projects });
 };
+
+/**
+ * find project by id
+ * @param {object} req - Request object
+ * @param {object} res - Response object
+ * @return {json} res.json
+ */
+module.exports.findOne = async (req, res) => {
+  const project = await Model.Project.findOne(
+    {
+      where: { projectId: req.params.projectId }, raw: true
+    }
+  );
+  if (!project) {
+    return res.status(400).json({ status: 'error', message: 'no project by that id' });
+  }
+
+  return res.status(200).json({ status: 'success', message: 'all projects fetched', data: project });
+};
