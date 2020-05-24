@@ -90,3 +90,26 @@ module.exports.update = async (req, res) => {
 
   return res.status(200).json({ status: 'success', message: 'project details have been updated' });
 };
+
+/**
+ * delete projects
+ * @param {object} req - Request object
+ * @param {object} res - Response object
+ * @return {json} res.json
+ */
+module.exports.delete = async (req, res) => {
+  const { projectId } = req.body;
+  const project = await Model.Project.findByPk(projectId);
+
+  if (!project) {
+    return res.status(400).json({ status: 'error', message: 'this project does not exist' });
+  }
+
+  try {
+    await project.destroy();
+  } catch (error) {
+    return res.status(400).json({ status: 'error', message: 'error occured while deleting this project' });
+  }
+
+  return res.status(200).json({ status: 'success', message: 'successfully deleted this project' });
+};
